@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join a Fantasy Fussball league</title><meta name="description" content="An invite to a Fantasy Fussball league."><meta name="robots" content="noindex"><style>
+:root{--bg:#F4F5F6;--card:#FFFFFF;--ink:#000E14;--muted:#34383C;--red:#D20515;--on-red:#FFFFFF;--line:#C9CCCF;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#000E14;--card:#0C1A21;--ink:#F4F5F6;--muted:#C9CCCF;--red:#FF6B6B;--on-red:#000E14;--line:#34383C}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:46rem;margin:0 auto;padding:2rem 1rem 4rem}
+h1{font-size:2rem;line-height:1.2;margin:0 0 .25rem}
+h1::after{content:"";display:block;width:3rem;height:.25rem;background:var(--red);margin-top:.75rem}
+section{background:var(--card);border:1px solid var(--line);border-radius:.75rem;padding:1.25rem 1.25rem 1.5rem;margin:1.5rem 0}
+.code{font:700 2.25rem/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.2em;margin:.5rem 0 1rem;overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:.75rem}
+.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;min-width:48px;padding:.75rem 1.25rem;border-radius:.5rem;border:2px solid var(--red);background:var(--card);color:var(--red);font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.button.primary{background:var(--red);color:var(--on-red)}
+.button:focus-visible,a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+a{color:var(--red);text-underline-offset:.15em}
+.muted{color:var(--muted)}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}[hidden]{display:none!important}
+</style></head>
+<body><main>
+<h1>Fantasy Fussball</h1>
+<section aria-labelledby="title">
+<h2 id="title" data-t="title">Join a league</h2>
+<p data-t="invited">You've been invited to a Fantasy Fussball league with this code:</p>
+<p class="code"><span id="code" aria-hidden="true"></span><span id="code-spoken" class="sr"></span></p>
+<div class="actions">
+<a class="button primary" id="open" href="#" hidden data-t="open">Open in the app</a>
+<button class="button" id="copy" type="button" hidden data-t="copy">Copy the code</button>
+</div>
+<p id="copied" class="muted" aria-live="polite"></p>
+<p data-t="how">In the app, go to Leagues, tap Join with a code and enter it.</p>
+<p id="missing" hidden data-t="missing">This link has no code. Ask whoever invited you for the 6 letters and numbers.</p>
+</section>
+<p class="muted" data-t="app">Don't have the app yet? Fantasy Fussball is a private game among friends: ask whoever invited you for a test invite (Firebase App Distribution on Android, TestFlight on iPhone). Then tap the invite link again.</p>
+<p><a href="../privacy/" data-t="privacy">Privacy policy</a></p>
+</main>
+<script>
+(function () {
+  var text = {
+    de: {
+      title: "Einer Liga beitreten",
+      invited: "Du wurdest mit diesem Code in eine Fantasy-Fussball-Liga eingeladen:",
+      open: "In der App öffnen",
+      copy: "Code kopieren",
+      copied: "Code kopiert.",
+      how: "Geh in der App auf Ligen, tippe auf Mit Code beitreten und gib ihn ein.",
+      missing: "Dieser Link hat keinen Code. Frag die Person, die dich eingeladen hat, nach den 6 Buchstaben und Ziffern.",
+      app: "Noch keine App? Fantasy Fussball ist ein privates Spiel unter Freunden: Frag die Person, die dich eingeladen hat, nach einer Testeinladung (Firebase App Distribution auf Android, TestFlight auf dem iPhone). Tippe danach noch einmal auf den Einladungslink.",
+      privacy: "Datenschutz",
+      pageTitle: "Einer Fantasy-Fussball-Liga beitreten"
+    },
+    es: {
+      title: "Unirse a una liga",
+      invited: "Te han invitado a una liga de Fantasy Fussball con este código:",
+      open: "Abrir en la app",
+      copy: "Copiar el código",
+      copied: "Código copiado.",
+      how: "En la app, ve a Ligas, toca Unirse con un código e introdúcelo.",
+      missing: "Este enlace no tiene código. Pide las 6 letras y números a quien te invitó.",
+      app: "¿Aún no tienes la app? Fantasy Fussball es un juego privado entre amigos: pide a quien te invitó una invitación de prueba (Firebase App Distribution en Android, TestFlight en iPhone). Después toca de nuevo el enlace de invitación.",
+      privacy: "Privacidad",
+      pageTitle: "Unirse a una liga de Fantasy Fussball"
+    }
+  };
+  var lang = (navigator.language || "en").slice(0, 2).toLowerCase();
+  var t = text[lang];
+  if (t) {
+    document.documentElement.lang = lang;
+    document.title = t.pageTitle;
+    document.querySelectorAll("[data-t]").forEach(function (el) { el.textContent = t[el.getAttribute("data-t")]; });
+  }
+  var copiedText = t ? t.copied : "Code copied.";
+
+  // The same rule as the app: letters and digits, upper case, six of them.
+  var code = (new URLSearchParams(location.search).get("code") || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  if (code.length !== 6) {
+    document.getElementById("missing").hidden = false;
+    return;
+  }
+  document.getElementById("code").textContent = code;
+  // Screen readers get it letter by letter, not as a word.
+  document.getElementById("code-spoken").textContent = code.split("").join(" ");
+
+  // Android, when the link reached the browser instead of the app (App Links not verified yet): an intent link opens
+  // the app directly; without the app installed, Chrome comes back to this page.
+  if (/Android/i.test(navigator.userAgent)) {
+    var open = document.getElementById("open");
+    open.href = "intent://brandofs.github.io/fantasy-fussball/join/?code=" + code +
+      "#Intent;scheme=https;package=com.brandomadden.podolski;S.browser_fallback_url=" +
+      encodeURIComponent(location.href.split("#")[0]) + ";end";
+    open.hidden = false;
+  }
+
+  if (navigator.clipboard) {
+    var copy = document.getElementById("copy");
+    copy.hidden = false;
+    copy.addEventListener("click", function () {
+      navigator.clipboard.writeText(code).then(function () {
+        document.getElementById("copied").textContent = copiedText;
+      });
+    });
+  }
+})();
+</script>
+</body></html>
